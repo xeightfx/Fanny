@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrito | Fanny.com</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+</head><body>
+<nav class="navbar bg-white border-bottom"><div class="container">
+  <a class="navbar-brand logo" href="index.html">Style<span>Market</span></a>
+  <div id="navUsuario"></div>
+</div></nav>
+<main class="container my-4">
+  <h1 class="h3 fw-bold mb-3">Tu carrito</h1>
+  <div id="msg"></div>
+  <div id="contenido"></div>
+</main>
+<span id="contadorCarrito" class="d-none"></span>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script><script src="js/auth.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const dinero = n => "S/ " + Number(n).toFixed(2);
+const aviso = (t, tipo = "danger") => $("msg").innerHTML = `<div class="alert alert-${tipo}">${t}</div>`;
+if (!esCliente()) location.href = "login.html?volver=carrito.html";
+let carrito;
+
+async function cargar() {
+  carrito = await apiFetch("/cliente/carrito");
+  if (!carrito.items.length) { $("contenido").innerHTML = `<p class="text-muted">Tu carrito está vacío. <a href="index.html">Ver productos</a></p>`; return; }
+  const filas = carrito.items.map(i => `
+    <tr><td><img src="${i.imagenUrl || ""}" width="50" class="me-2 rounded">${i.nombre}<br><small class="text-muted">${i.marca || ""} ${i.talla || ""} ${i.color || ""}</small></td>
+    <td>${dinero(i.precio)}</td>
+    <td><input type="number" min="1" max="${i.stockDisponible}" value="${i.cantidad}" class="form-control form-control-sm" style="width:80px" data-cant="${i.productoId}"></td>
+    <td>${dinero(i.subtotal)}</td>
+    <td><button class="btn btn-sm btn-outline-danger" data-quitar="${i.productoId}">Quitar</button></td></tr>`).join("");
+  $("contenido").innerHTML = `
+    <div class="table-responsive bg-white rounded shadow-sm"><table class="table align-middle mb-0">
+      <thead><tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Subtotal</th><th></th></tr></thead><tbody>${filas}</tbody></table></div>
+    <h4 class="text-end my-3">Total: ${dinero(carrito.total)}</h4>
+    <div class="bg-white rounded shadow-sm p-3">
+      <h5>Entrega</h5>
+      <select id="metodo" class="form-select mb-2">
+        <option value="RECOJO_TIENDA">Recojo en tienda</option><option value="DOMICILIO">Envío a domicilio</option></select>
+      <div id="dir" class="d-none">
+        <select id="dirSel" class="form-select mb-2"></select>
+        <div id="dirNueva" class="row g-2">
+          <div class="col-12"><input id="dDir" class="form-control" placeholder="Dirección"></div>
+          <div class="col-6"><input id="dDis" class="form-control" placeholder="Distrito"></div>
+          <div class="col-6"><input id="dCiu" class="form-control" placeholder="Ciudad"></div>
+        </div>
+      </div>
+      <button id="btnComprar" class="btn btn-marca mt-3">Confirmar compra</button>
+    </div>`;
+}
+
+async function cargarDirecciones() {
+  const dirs = await apiFetch("/cliente/direcciones");
+  $("dirSel").innerHTML = dirs.map(d => `<option value="${d.id}">${d.direccion}, ${d.distrito}</option>`).join("")
+    + `<option value="">+ Nueva dirección</option>`;
+  const mostrarNueva = () => $("dirNueva").classList.toggle("d-none", $("dirSel").value !== "");
+  $("dirSel").onchange = mostrarNueva; mostrarNueva();
+}
+
+document.addEventListener("change", async e => {
+  try {
+    if (e.target.dataset.cant) {
+      await apiFetch("/cliente/carrito/items/" + e.target.dataset.cant, { method: "PUT", body: JSON.stringify({ cantidad: Number(e.target.value) }) });
+      await cargar();
+    }
+    if (e.target.id === "metodo") {
+      const dom = e.target.value === "DOMICILIO";
+      $("dir").classList.toggle("d-none", !dom);
+      if (dom) await cargarDirecciones();
+    }
+  } catch (err) { aviso(err.message); await cargar(); }
+});
+
+document.addEventListener("click", async e => {
+  try {
+    if (e.target.dataset.quitar) { await apiFetch("/cliente/carrito/items/" + e.target.dataset.quitar, { method: "DELETE" }); await cargar(); }
+    if (e.target.id === "btnComprar") {
+      let direccionId = null;
+      if ($("metodo").value === "DOMICILIO") {
+        direccionId = $("dirSel").value ? Number($("dirSel").value) : null;
+        if (!direccionId) {
+          const d = await apiFetch("/cliente/direcciones", { method: "POST", body: JSON.stringify({
+            direccion: $("dDir").value.trim(), distrito: $("dDis").value.trim(), ciudad: $("dCiu").value.trim(), principal: true }) });
+          direccionId = d.id;
+        }
+      }
+      const p = await apiFetch("/cliente/checkout", { method: "POST", body: JSON.stringify({ direccionId, metodoEntrega: $("metodo").value }) });
+      $("contenido").innerHTML = "";
+      aviso(`¡Compra realizada! Pedido <b>${p.numeroPedido}</b> por ${dinero(p.total)}. <a href="pedidos.html">Ver mis pedidos</a>`, "success");
+    }
+  } catch (err) { aviso(err.message); }
+});
+
+dibujarNav(); cargar().catch(err => aviso(err.message));
+</script></body></html>

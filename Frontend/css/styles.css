@@ -1,0 +1,95 @@
+:root {
+  --marca: #e91e63;
+  --marca-oscuro: #c2185b;
+  --oscuro: #212529;
+}
+
+body {
+  font-family: "Outfit", sans-serif;
+  background-color: #f8f9fa;
+}
+
+.barra-oferta {
+  background: var(--oscuro);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--oscuro);
+}
+.logo span { color: var(--marca); }
+
+.btn-marca {
+  background: var(--marca);
+  border-color: var(--marca);
+  color: #fff;
+}
+.btn-marca:hover {
+  background: var(--marca-oscuro);
+  border-color: var(--marca-oscuro);
+  color: #fff;
+}
+
+.portada {
+  background: linear-gradient(135deg, #e91e63, #ff7043);
+  color: #fff;
+}
+
+.producto-card {
+  border: none;
+  transition: transform 0.2s;
+}
+.producto-card:hover { transform: translateY(-5px); }
+
+.precio { color: var(--marca); }
+
+.pie {
+  background: var(--oscuro);
+  color: #adb5bd;
+}
+
+
+/* ===== FOOTER CON EL COLOR DE LA PORTADA ===== */
+.pie-oscuro {
+  background: linear-gradient(135deg, #ec2a62 0%, #ff6b45 100%);
+  color: #fff;
+}
+
+/* Logo en Arial, sin brillo */
+.pie-logo {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: 0;
+  text-transform: none;
+  text-shadow: none;
+  color: #fff;
+}
+
+.pie-desc { color: rgba(255, 255, 255, .9); }
+
+.pie-titulo { color: #fff; }
+
+.pie-lista a { color: rgba(255, 255, 255, .85); }
+.pie-lista a:hover { color: #fff; text-decoration: underline; }
+
+.pie-contacto li { color: rgba(255, 255, 255, .9); }
+.pie-contacto i { color: #fff; }
+
+.pie-redes a {
+  border-color: rgba(255, 255, 255, .6);
+  color: #fff;
+}
+.pie-redes a:hover {
+  background: #fff;
+  color: #ec2a62;
+  border-color: #fff;
+  box-shadow: none;
+}
+
+.pie-linea { border-top-color: rgba(255, 255, 255, .35); }
+.pie-pagos { color: #fff; }
+.pie-copy { color: rgba(255, 255, 255, .75); }

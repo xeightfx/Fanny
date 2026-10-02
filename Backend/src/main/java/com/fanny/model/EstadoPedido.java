@@ -1,0 +1,5 @@
+package com.fanny.model;
+
+public enum EstadoPedido {
+    PENDIENTE, PAGADO, EN_PREPARACION, PREPARADO, DESPACHADO, EN_TRANSITO, ENTREGADO, CANCELADO, DEVUELTO
+}
